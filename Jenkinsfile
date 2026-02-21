@@ -16,6 +16,10 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir('terraform') {
+                    withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+            ]]) {
                     sh 'terraform init'
                 }
             }
@@ -24,6 +28,10 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
+                    withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+            ]]) {
                     sh 'terraform apply -auto-approve'
                 }
             }
@@ -56,6 +64,10 @@ pipeline {
 
         stage('Login to ECR') {
             steps {
+                withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+            ]]) {
                 sh '''
                 aws ecr get-login-password --region $AWS_REGION | \
                 docker login --username AWS --password-stdin $ECR_REPO
