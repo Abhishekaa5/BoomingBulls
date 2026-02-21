@@ -95,9 +95,6 @@ pipeline {
         }
 
         stage('Approval Before Deployment') {
-            when {
-                expression { env.SKIP_APPLY != "true" }
-            }
             steps {
                 script {
                     env.SKIP_DEPLOY = "false"
@@ -117,7 +114,7 @@ pipeline {
 
         stage('Build Docker') {
             when {
-                expression { env.SKIP_APPLY != "true" }
+                expression { env.SKIP_APPLY != "true" && env.SKIP_DEPLOY != "true" }
             }
             steps {
                 sh 'docker build -t devops-app ./app'
@@ -126,7 +123,7 @@ pipeline {
 
         stage('Login to ECR') {
             when {
-                expression { env.SKIP_APPLY != "true" }
+                expression { env.SKIP_APPLY != "true" && env.SKIP_DEPLOY != "true" }
             }
             steps {
                 withCredentials([[
@@ -143,7 +140,7 @@ pipeline {
 
         stage('Push Image') {
             when {
-                expression { env.SKIP_APPLY != "true" }
+                expression { env.SKIP_APPLY != "true" && env.SKIP_DEPLOY != "true" }
             }
             steps {
                 sh """
