@@ -108,4 +108,5 @@ resource "aws_iam_instance_profile" "profile" {
 # ECR Repository
 resource "aws_ecr_repository" "boomibulls_repo" {
   name = "boomibulls-app"
+  force_delete = true
 }
