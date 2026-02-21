@@ -17,9 +17,9 @@ pipeline {
             steps {
                 dir('terraform') {
                     withCredentials([[
-                $class: 'AmazonWebServicesCredentialsBinding',
-                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
-            ]]) {
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    ]]) {
                     sh 'terraform init'
                 }
             }
@@ -29,8 +29,8 @@ pipeline {
             steps {
                 dir('terraform') {
                     withCredentials([[
-                $class: 'AmazonWebServicesCredentialsBinding',
-                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
             ]]) {
                     sh 'terraform apply -auto-approve'
                 }
@@ -65,8 +65,8 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 withCredentials([[
-                $class: 'AmazonWebServicesCredentialsBinding',
-                credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
             ]]) {
                 sh '''
                 aws ecr get-login-password --region $AWS_REGION | \
