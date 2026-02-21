@@ -6,6 +6,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Abhishekaa5/boomingbull.git'
@@ -69,37 +70,35 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
                 ]]) {
-                    sh '''
-                    aws ecr get-login-password --region $AWS_REGION | \
-                    docker login --username AWS --password-stdin $ECR_REPO
-                    '''
+                    sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | \
+                    docker login --username AWS --password-stdin ${ECR_REPO}
+                    """
                 }
             }
         }
 
         stage('Push Image') {
             steps {
-                sh '''
-                docker tag devops-app:latest $ECR_REPO:latest
-                docker push $ECR_REPO:latest
-                '''
+                sh """
+                docker tag devops-app:latest ${ECR_REPO}:latest
+                docker push ${ECR_REPO}:latest
+                """
             }
         }
 
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ec2-ssh-key']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP << EOF
-                        aws ecr get-login-password --region $AWS_REGION | \
-                        docker login --username AWS --password-stdin $ECR_REPO
-
-                          docker pull $ECR_REPO:latest
-                          docker stop app || true
-                          docker rm app || true
-                          docker run -d -p 80:80 --name app --restart always $ECR_REPO:latest
-                        EOF
-                        '''
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ec2-user@${EC2_IP} "
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO} &&
+                    docker pull ${ECR_REPO}:latest &&
+                    docker stop app || true &&
+                    docker rm app || true &&
+                    docker run -d -p 80:80 --name app --restart always ${ECR_REPO}:latest
+                    "
+                    """
                 }
             }
         }
