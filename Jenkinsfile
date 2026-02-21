@@ -74,6 +74,26 @@ pipeline {
             }
         }
 
+        stage('Wait for EC2 Ready') {
+            steps {
+                script {
+                    echo "Waiting 60 seconds for EC2 to finish initializing..."
+                    sleep(time: 60, unit: 'SECONDS')
+                }
+            }
+        }
+
+        stage('Check SSH availability') {
+            steps {
+                script {
+                    echo "Checking SSH connectivity..."
+                    retry(10) {
+                    sh "nc -zv ${EC2_IP} 22"
+                    }
+                }
+            }
+        }
+
         stage('Build Docker') {
             steps {
                 sh 'docker build -t devops-app ./app'
