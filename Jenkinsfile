@@ -20,8 +20,9 @@ pipeline {
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
                     ]]) {
-                    sh 'terraform init'
-                }
+                        sh 'terraform init'
+                    } 
+                } 
             }
         }
 
@@ -31,8 +32,9 @@ pipeline {
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
-            ]]) {
-                    sh 'terraform apply -auto-approve'
+                    ]]) {
+                        sh 'terraform apply -auto-approve'
+                    }
                 }
             }
         }
@@ -67,11 +69,12 @@ pipeline {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
-            ]]) {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION | \
-                docker login --username AWS --password-stdin $ECR_REPO
-                '''
+                ]]) {
+                    sh '''
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin $ECR_REPO
+                    '''
+                }
             }
         }
 
@@ -99,5 +102,6 @@ pipeline {
                 '''
             }
         }
-    }
-}
+
+    } 
+} 
