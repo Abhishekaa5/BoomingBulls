@@ -88,17 +88,19 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sh '''
-                ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP << EOF
-                  aws ecr get-login-password --region $AWS_REGION | \
-                  docker login --username AWS --password-stdin $ECR_REPO
+                sshagent(['ec2-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP << EOF
+                        aws ecr get-login-password --region $AWS_REGION | \
+                        docker login --username AWS --password-stdin $ECR_REPO
 
-                  docker pull $ECR_REPO:latest
-                  docker stop app || true
-                  docker rm app || true
-                  docker run -d -p 80:80 --name app --restart always $ECR_REPO:latest
-                EOF
-                '''
+                          docker pull $ECR_REPO:latest
+                          docker stop app || true
+                          docker rm app || true
+                          docker run -d -p 80:80 --name app --restart always $ECR_REPO:latest
+                        EOF
+                        '''
+                }
             }
         }
     }
