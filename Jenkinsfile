@@ -83,16 +83,16 @@ pipeline {
             }
         }
 
-        stage('Check SSH availability') {
-            steps {
-                script {
-                    echo "Checking SSH connectivity..."
-                    retry(10) {
-                    sh "nc -zv ${EC2_IP} 22"
-                    }
-                }
-            }
-        }
+        // stage('Check SSH availability') {
+        //     steps {
+        //         script {
+        //             echo "Checking SSH connectivity..."
+        //             retry(10) {
+        //             sh "nc -zv ${EC2_IP} 22"
+        //             }
+        //         }
+        //     }
+        // }
 
         stage('Build Docker') {
             steps {
