@@ -165,7 +165,7 @@ pipeline {
                     docker pull ${ECR_REPO}:latest &&
                     docker stop app || true &&
                     docker rm app || true &&
-                    docker run -d -p 80:80 --name app --restart always ${ECR_REPO}:latest
+                    docker run -d -p 80:5000 --name app --restart always ${ECR_REPO}:latest
                     "
                     """
                 }

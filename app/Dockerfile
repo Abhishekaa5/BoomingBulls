@@ -7,6 +7,6 @@ COPY templates ./templates
 
 RUN pip install --no-cache-dir flask
 
-EXPOSE 80
+EXPOSE 5000
 
 CMD ["python", "app.py"]
