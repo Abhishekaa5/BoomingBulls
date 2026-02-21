@@ -5,14 +5,6 @@ pipeline {
         AWS_REGION = "ap-south-1"
     }
 
-    parameters {
-        choice(
-            name: 'ACTION',
-            choices: ['APPLY', 'DESTROY'],
-            description: 'Choose Terraform action'
-        )
-    }
-
     stages {
 
         stage('Checkout') {
@@ -24,39 +16,26 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir('terraform') {
-                    sh 'terraform init'
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    ]]) {
+                        sh 'terraform init'
+                    }
                 }
             }
         }
 
-        stage('Terraform Plan') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
-            steps {
-                dir('terraform') {
-                    sh 'terraform plan -out=tfplan'
-                }
-                archiveArtifacts artifacts: 'terraform/tfplan', fingerprint: true
-            }
-        }
-
-        stage('Approval Before Apply') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
+        stage('Approval Before Terraform Apply') {
             steps {
                 script {
-                    def approval = timeout(time: 5, unit: 'MINUTES') {
-                        input(
-                            message: "Apply Terraform changes?",
-                            parameters: [
-                                choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to apply')
-                            ]
-                        )
-                    }
-
-                    if (approval != 'YES') {
+                    def applyApproval = input(
+                        message: 'Do you want to APPLY Terraform?',
+                        parameters: [
+                            choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to apply')
+                        ]
+                    )
+                    if (applyApproval != 'YES') {
                         error("Terraform Apply Skipped by User")
                     }
                 }
@@ -64,20 +43,19 @@ pipeline {
         }
 
         stage('Terraform Apply') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
             steps {
                 dir('terraform') {
-                    sh 'terraform apply tfplan'
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    ]]) {
+                        sh 'terraform apply -auto-approve'
+                    }
                 }
             }
         }
 
         stage('Get Terraform Outputs') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
             steps {
                 script {
                     env.ECR_REPO = sh(
@@ -90,30 +68,35 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    echo "ECR Repo: ${ECR_REPO}"
-                    echo "EC2 IP: ${EC2_IP}"
+                    echo "ECR Repo: ${env.ECR_REPO}"
+                    echo "EC2 IP: ${env.EC2_IP}"
                 }
             }
         }
 
-        stage('Build Docker Image') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
+        stage('Build Docker') {
             steps {
                 sh 'docker build -t devops-app ./app'
             }
         }
 
-        stage('Login & Push to ECR') {
-            when {
-                expression { params.ACTION == 'APPLY' }
+        stage('Login to ECR') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                ]]) {
+                    sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | \
+                    docker login --username AWS --password-stdin ${ECR_REPO}
+                    """
+                }
             }
+        }
+
+        stage('Push Image') {
             steps {
                 sh """
-                aws ecr get-login-password --region ${AWS_REGION} | \
-                docker login --username AWS --password-stdin ${ECR_REPO}
-
                 docker tag devops-app:latest ${ECR_REPO}:latest
                 docker push ${ECR_REPO}:latest
                 """
@@ -121,20 +104,14 @@ pipeline {
         }
 
         stage('Approval Before Deployment') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
             steps {
                 script {
-                    def deployApproval = timeout(time: 5, unit: 'MINUTES') {
-                        input(
-                            message: "Deploy to EC2?",
-                            parameters: [
-                                choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to deploy')
-                            ]
-                        )
-                    }
-
+                    def deployApproval = input(
+                        message: 'Do you want to DEPLOY to EC2?',
+                        parameters: [
+                            choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to deploy')
+                        ]
+                    )
                     if (deployApproval != 'YES') {
                         error("Deployment Skipped by User")
                     }
@@ -143,9 +120,6 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            when {
-                expression { params.ACTION == 'APPLY' }
-            }
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
@@ -162,48 +136,34 @@ pipeline {
         }
 
         stage('Approval Before Destroy') {
-            when {
-                expression { params.ACTION == 'DESTROY' }
-            }
             steps {
                 script {
-                    def destroyApproval = timeout(time: 5, unit: 'MINUTES') {
-                        input(
-                            message: "Are you sure you want to destroy infrastructure?",
-                            parameters: [
-                                choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to destroy')
-                            ]
-                        )
-                    }
-
+                    def destroyApproval = input(
+                        message: 'Do you want to DESTROY infrastructure?',
+                        parameters: [
+                            choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to destroy')
+                        ]
+                    )
                     if (destroyApproval != 'YES') {
-                        error("Destroy Skipped by User")
+                        echo "Terraform Destroy Skipped by User"
+                        return
                     }
                 }
             }
         }
 
         stage('Terraform Destroy') {
-            when {
-                expression { params.ACTION == 'DESTROY' }
-            }
             steps {
                 dir('terraform') {
-                    sh 'terraform destroy -auto-approve'
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    ]]) {
+                        sh 'terraform destroy -auto-approve'
+                    }
                 }
             }
         }
-    }
 
-    post {
-        success {
-            echo "Pipeline executed successfully 🚀"
-        }
-        failure {
-            echo "Pipeline failed ❌"
-        }
-        aborted {
-            echo "Pipeline aborted by user ⚠️"
-        }
     }
 }
