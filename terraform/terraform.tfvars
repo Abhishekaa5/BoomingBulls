@@ -1,2 +1,2 @@
 region   = "ap-south-1"
-key_name = "jeel-test.ppk"
+key_name = "jeel-test"
