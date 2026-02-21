@@ -62,7 +62,7 @@ resource "aws_security_group" "boomibulls_sg" {
 
 # EC2 Instance
 resource "aws_instance" "boomibulls_web" {
-  ami           = "ami-0c55b159cbfafe1f0" # change per region
+  ami           = "ami-051a31ab2f4d498f5"
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.boomibulls_public.id
   key_name      = var.key_name
