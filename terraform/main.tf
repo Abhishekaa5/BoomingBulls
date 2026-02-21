@@ -68,6 +68,7 @@ resource "aws_instance" "boomibulls_web" {
   key_name      = var.key_name
   vpc_security_group_ids = [aws_security_group.boomibulls_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.profile.name
+  associate_public_ip_address = true
 
   user_data = file("user_data.sh")
 
