@@ -94,6 +94,27 @@ pipeline {
             }
         }
 
+        stage('Approval Before Deployment') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
+            steps {
+                script {
+                    env.SKIP_DEPLOY = "false"
+                    def deployApproval = input(
+                        message: 'Do you want to DEPLOY to EC2?',
+                        parameters: [
+                            choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to deploy')
+                        ]
+                    )
+                    if (deployApproval != 'YES') {
+                        echo "Deployment Skipped by User"
+                        env.SKIP_DEPLOY = "true"
+                    }
+                }
+            }
+        }
+
         stage('Build Docker') {
             when {
                 expression { env.SKIP_APPLY != "true" }
@@ -129,27 +150,6 @@ pipeline {
                 docker tag devops-app:latest ${ECR_REPO}:latest
                 docker push ${ECR_REPO}:latest
                 """
-            }
-        }
-
-        stage('Approval Before Deployment') {
-            when {
-                expression { env.SKIP_APPLY != "true" }
-            }
-            steps {
-                script {
-                    env.SKIP_DEPLOY = "false"
-                    def deployApproval = input(
-                        message: 'Do you want to DEPLOY to EC2?',
-                        parameters: [
-                            choice(name: 'CONFIRM', choices: 'NO\nYES', description: 'Select YES to deploy')
-                        ]
-                    )
-                    if (deployApproval != 'YES') {
-                        echo "Deployment Skipped by User"
-                        env.SKIP_DEPLOY = "true"
-                    }
-                }
             }
         }
 
