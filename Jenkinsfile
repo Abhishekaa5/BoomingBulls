@@ -21,8 +21,8 @@ pipeline {
                         credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
                     ]]) {
                         sh 'terraform init'
-                    } 
-                } 
+                    }
+                }
             }
         }
 
@@ -43,12 +43,12 @@ pipeline {
             steps {
                 script {
                     env.ECR_REPO = sh(
-                        script: "cd terraform && terraform output -raw ecr_repo_url",
+                        script: "cd terraform && terraform output -raw ecr_url",
                         returnStdout: true
                     ).trim()
 
                     env.EC2_IP = sh(
-                        script: "cd terraform && terraform output -raw ec2_public_ip",
+                        script: "cd terraform && terraform output -raw public_ip",
                         returnStdout: true
                     ).trim()
 
@@ -103,5 +103,5 @@ pipeline {
             }
         }
 
-    } 
-} 
+    }
+}
