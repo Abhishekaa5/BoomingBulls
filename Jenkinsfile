@@ -6,24 +6,33 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/Abhishekaa5/boomingbull.git'
             }
         }
 
-        stage('Terraform Init & Apply') {
+        stage('Terraform Init') {
             steps {
                 dir('terraform') {
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
                     ]]) {
-                        sh '''
-                        terraform init
-                        terraform apply -auto-approve
-                        '''
+                        sh 'terraform init'
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: '75554f9b-2440-44ec-bd43-af2014f25797'
+                    ]]) {
+                        sh 'terraform apply -auto-approve'
                     }
                 }
             }
@@ -92,6 +101,5 @@ pipeline {
                 '''
             }
         }
-
     }
 }
