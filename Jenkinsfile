@@ -29,6 +29,7 @@ pipeline {
         stage('Approval Before Terraform Apply') {
             steps {
                 script {
+                    env.SKIP_APPLY = "false"
                     def applyApproval = input(
                         message: 'Do you want to APPLY Terraform?',
                         parameters: [
@@ -36,13 +37,17 @@ pipeline {
                         ]
                     )
                     if (applyApproval != 'YES') {
-                        error("Terraform Apply Skipped by User")
+                        echo "Terraform Apply Skipped by User"
+                        env.SKIP_APPLY = "true"
                     }
                 }
             }
         }
 
         stage('Terraform Apply') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 dir('terraform') {
                     withCredentials([[
@@ -56,6 +61,9 @@ pipeline {
         }
 
         stage('Get Terraform Outputs') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 script {
                     env.ECR_REPO = sh(
@@ -75,6 +83,9 @@ pipeline {
         }
 
         stage('Wait for EC2 Ready') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 script {
                     echo "Waiting 60 seconds for EC2 to finish initializing..."
@@ -83,24 +94,19 @@ pipeline {
             }
         }
 
-        // stage('Check SSH availability') {
-        //     steps {
-        //         script {
-        //             echo "Checking SSH connectivity..."
-        //             retry(10) {
-        //             sh "nc -zv ${EC2_IP} 22"
-        //             }
-        //         }
-        //     }
-        // }
-
         stage('Build Docker') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 sh 'docker build -t devops-app ./app'
             }
         }
 
         stage('Login to ECR') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -115,6 +121,9 @@ pipeline {
         }
 
         stage('Push Image') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 sh """
                 docker tag devops-app:latest ${ECR_REPO}:latest
@@ -124,8 +133,12 @@ pipeline {
         }
 
         stage('Approval Before Deployment') {
+            when {
+                expression { env.SKIP_APPLY != "true" }
+            }
             steps {
                 script {
+                    env.SKIP_DEPLOY = "false"
                     def deployApproval = input(
                         message: 'Do you want to DEPLOY to EC2?',
                         parameters: [
@@ -133,13 +146,17 @@ pipeline {
                         ]
                     )
                     if (deployApproval != 'YES') {
-                        error("Deployment Skipped by User")
+                        echo "Deployment Skipped by User"
+                        env.SKIP_DEPLOY = "true"
                     }
                 }
             }
         }
 
         stage('Deploy to EC2') {
+            when {
+                expression { env.SKIP_APPLY != "true" && env.SKIP_DEPLOY != "true" }
+            }
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
@@ -158,6 +175,7 @@ pipeline {
         stage('Approval Before Destroy') {
             steps {
                 script {
+                    env.SKIP_DESTROY = "false"
                     def destroyApproval = input(
                         message: 'Do you want to DESTROY infrastructure?',
                         parameters: [
@@ -166,13 +184,16 @@ pipeline {
                     )
                     if (destroyApproval != 'YES') {
                         echo "Terraform Destroy Skipped by User"
-                        return
+                        env.SKIP_DESTROY = "true"
                     }
                 }
             }
         }
 
         stage('Terraform Destroy') {
+            when {
+                expression { env.SKIP_DESTROY != "true" }
+            }
             steps {
                 dir('terraform') {
                     withCredentials([[
