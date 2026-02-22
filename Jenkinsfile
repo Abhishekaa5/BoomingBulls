@@ -162,7 +162,7 @@ pipeline {
                     docker pull ${ECR_REPO}:latest &&
                     docker stop app || true &&
                     docker rm app || true &&
-                    docker run -d -p 80:5000 --name app --restart always -v /var/log/flask_app.log:/var/log/flask_app.log ${ECR_REPO}:latest sh -c "python /app/app.py >> /var/log/flask_app.log 2>&1"
+                    docker run -d -p 80:5000 --name app --restart always -v /var/log/flask_app.log:/var/log/flask_app.log 361769570023.dkr.ecr.ap-south-1.amazonaws.com/devops-app:latest sh -c 'python /app/app.py >> /var/log/flask_app.log 2>&1'
                     "
                     """
                 }
