@@ -4,15 +4,7 @@ sudo yum install -y docker
 sudo systemctl start docker
 sudo usermod -aG docker ec2-user
 sudo yum install -y aws-cli
-
 sudo yum install -y amazon-cloudwatch-agent
-
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-    -a fetch-config -m ec2 -c default -s
-
-sudo mkdir -p /var/log
-sudo touch /var/log/flask_app.log
-sudo chown ec2-user:ec2-user /var/log/flask_app.log
 
 sudo cat <<EOF > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
 {
@@ -36,3 +28,6 @@ EOF
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
 
+sudo mkdir -p /var/log
+sudo touch /var/log/flask_app.log
+sudo chown ec2-user:ec2-user /var/log/flask_app.log
