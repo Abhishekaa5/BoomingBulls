@@ -106,6 +106,25 @@ pipeline {
             }
         }
 
+        stage('Get Terraform Outputs') {
+            steps {
+                script {
+                    env.ECR_REPO = sh(
+                    script: "cd terraform && terraform output -raw ecr_url",
+                    returnStdout: true
+                    ).trim()
+
+                    env.EC2_IP = sh(
+                        script: "cd terraform && terraform output -raw public_ip",
+                        returnStdout: true
+                    ).trim()
+
+                    echo "ECR Repo: ${env.ECR_REPO}"
+                    echo "EC2 IP: ${env.EC2_IP}"
+                }
+            }
+        }
+
         stage('Build Docker') {
             when { expression { env.SKIP_DEPLOY != "true" } }
             steps {
