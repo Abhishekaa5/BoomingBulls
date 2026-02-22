@@ -106,7 +106,7 @@ pipeline {
             }
         }
 
-        stage('Get Terraform Outputs') {
+        stage('Always Get Terraform Outputs') {
             steps {
                 script {
                     env.ECR_REPO = sh(
