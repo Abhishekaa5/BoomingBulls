@@ -78,7 +78,6 @@ resource "aws_instance" "boomibulls_web" {
 }
 
 
-# IAM Role for EC2 
 resource "aws_iam_role" "ec2_role" {
   name = "ec2-ecr-role"
 
@@ -99,13 +98,22 @@ resource "aws_iam_role_policy_attachment" "ecr_policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_policy" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 
 resource "aws_iam_instance_profile" "profile" {
   name = "ec2-profile"
   role = aws_iam_role.ec2_role.name
 }
 
-# ECR Repository
 resource "aws_ecr_repository" "boomibulls_repo" {
   name = "boomibulls-app"
   force_delete = true
