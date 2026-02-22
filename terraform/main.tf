@@ -2,24 +2,20 @@ provider "aws" {
   region = var.region
 }
 
-# VPC
 resource "aws_vpc" "boomibulls_vpc" {
   cidr_block = "10.0.0.0/16"
 }
 
-# Public Subnet
 resource "aws_subnet" "boomibulls_public" {
   vpc_id                  = aws_vpc.boomibulls_vpc.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
 }
 
-# Internet Gateway
 resource "aws_internet_gateway" "boomibulls_gw" {
   vpc_id = aws_vpc.boomibulls_vpc.id
 }
 
-# Route Table
 resource "aws_route_table" "boomibulls_rt" {
   vpc_id = aws_vpc.boomibulls_vpc.id
 
@@ -34,7 +30,6 @@ resource "aws_route_table_association" "boomibulls_assoc" {
   route_table_id = aws_route_table.boomibulls_rt.id
 }
 
-# Security Group
 resource "aws_security_group" "boomibulls_sg" {
   vpc_id = aws_vpc.boomibulls_vpc.id
 
@@ -60,7 +55,6 @@ resource "aws_security_group" "boomibulls_sg" {
   }
 }
 
-# EC2 Instance
 resource "aws_instance" "boomibulls_web" {
   ami           = "ami-051a31ab2f4d498f5"
   instance_type = "t3.micro"

@@ -3,7 +3,6 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-# Logging to file
 logging.basicConfig(
     filename='/var/log/flask_app.log',
     level=logging.INFO,
