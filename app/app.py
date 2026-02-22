@@ -4,7 +4,6 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 logging.basicConfig(
-    filename='/var/log/flask_app.log',
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s'
 )
