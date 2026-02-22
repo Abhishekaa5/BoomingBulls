@@ -9,7 +9,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Abhishekaa5/boomingbull.git'
+                git branch: 'main', url: 'https://github.com/Abhishekaa5/BoomingBulls.git'
             }
         }
 
