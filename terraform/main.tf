@@ -26,6 +26,7 @@ resource "aws_route_table" "boomibulls_rt" {
   }
 }
 
+# Associate the route table with the public subnet
 resource "aws_route_table_association" "boomibulls_assoc" {
   subnet_id      = aws_subnet.boomibulls_public.id
   route_table_id = aws_route_table.boomibulls_rt.id
